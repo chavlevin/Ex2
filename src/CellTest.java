@@ -58,9 +58,4 @@ public class CellTest {
 
     }
 
-    @Test
-    public void testComputeForm_Invalid(){
-        assertNull(Cell.computeForm());
-    }
-
 }

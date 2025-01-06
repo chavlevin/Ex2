@@ -4,58 +4,51 @@ public class Cell {
     //This method checks if the String in cell is a number
 
     public static boolean isNumber(String n) {
-        boolean ans = false;//Starting by assuming the string isn't a number
+        if (n == null || n.isEmpty()) return false;
 
         boolean allDigits = true; //Checks if string n consists of only digits.
 
         for (int i = 0; i < n.length(); i++) {
-                if (!Character.isDigit(n.charAt(i))) {//Check for non-digit characters
-                    allDigits = false;
-                    break;
+            char c = n.charAt(i);
+            if (!Character.isDigit(c)) {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {//If the string is made up of characters other than digits, this ensures that it's either a negative sign or a decimal point
+            int decimalCount = 0;
+            for (int j = 0; j < n.length(); j++) {
+                char c = n.charAt(j);
 
-
-                }
-            if (!allDigits) {//If the string is made up of characters other than digits, this ensures that it's either a negative sign or a decimal point
-                for (int j = 0; j < n.length(); j++) {
-                    char c = n.charAt(j);
-                    if (c == '-' && j!=0) {//negative sign can only be in the beginning of the number
-                        return ans;
-                    }
-                    if (c == '.' && n.indexOf('.') != j) {//There cannot appear more than one decimal point in a number
-                        return ans;
-                    }
-                    if (c != '-' && c!= '.' && !Character.isDigit(c)) { //If there's any other character
-                        return ans;
-                    }
-
-                    return ans;//Returns false if the string is not a number
+                if (c == '-') {
+                    if (j != 0) return false;//negative sign can only be in the beginning of the number
+                } else if (c == '.') {
+                    decimalCount++;
+                    if (decimalCount > 1) return false;//There cannot be more than one decimal point in a number
+                } else if (!Character.isDigit(c)) {
+                    return false;//Any other non-digit character is invalid.
                 }
             }
-
-
-
-
         }
-        ans = true;
-        return true;//If all the checks are passed, then it's a number
+        return true;
     }
 
 
     //This method will check whether a string is text.
 
-   public static boolean isText (String t) {
-       if (isNumber(t)) {
-           return false;//Return false if the string is a number because then it isn't a text
-       }
-       if (isForm(t)) {
-           return false;//Return false if the string is a valid formula because then it isn't a text
-       }
-       return true;//Otherwise, it is a text
+    public static boolean isText(String t) {
+        if (isNumber(t)) {
+            return false;//Return false if the string is a number because then it isn't a text
+        }
+        if (isForm(t)) {
+            return false;//Return false if the string is a valid formula because then it isn't a text
+        }
+        return true;//Otherwise, it is a text
     }
 
     //This method will check whether a string is a formula.
 
-    public static boolean isForm (String f) {
+    public static boolean isForm(String f) {
         if (!f.startsWith("=")) {//A valid formula must start with an equals sign
             return false;
         }
@@ -74,29 +67,43 @@ public class Cell {
             return isForm("=" + content);
         }
 
+        boolean lastCharOp = true;//Checks if last character of string is an operator
         for (int i = 0; i < f.length(); i++) {
             char o = f.charAt(i);
 
             if (o == '+' || o == '-' || o == '*' || o == '/') { //Checking for valid operators in formula
-                String leftSide = f.substring(0, i);//Left side of the operator
-                String rightSide = f.substring(i, i + 1);//Right side of the operator
-
-                if (isForm("=" + leftSide) && isForm("=" + rightSide)) {
-                    return true;
+                if (lastCharOp) {
+                    return false;//Two operators in a row is invalid
+                }
+                lastCharOp = true;
+                } else if (Character.isDigit(o) || o == '(' || o == ')') {
+                    lastCharOp = false;
+                } else {
+                    return false;
                 }
             }
-
-            if (!Character.isDigit(o) && o != '+' && o != '-' && o != '*' && o != '/' && o != '(' && o != ')') {
-                return false;//Any other character would be invalid
+            if(lastCharOp) {
+                return false;//Ensures the last character isn't an operator
             }
-        }
-        return false;
-    }
+            int mainOpIndex = findMainOp(f);
+            if(mainOpIndex==-1) {
+                return false;//No valid operator found
+            }
 
-    private static boolean balancedPar (String f) {//Checks if amount of parentheses are balanced
+            String leftSide = f.substring(0, mainOpIndex);//Left side of the operator
+            String rightSide = f.substring(mainOpIndex + 1);//Everything to the right of the operator
+
+            return !leftSide.isEmpty() && !rightSide.isEmpty() && isForm("=" + leftSide) && isForm("="+ rightSide);
+            }
+
+
+
+
+
+            private static boolean balancedPar(String f) {//Checks if amount of parentheses are balanced
         int balance = 0;
 
-        for(int i = 0; i<f.length();i++) {
+        for (int i = 0; i < f.length(); i++) {
             char p = f.charAt(i);
             if (p == '(') {
                 balance++;//Each time there is an open parentheses the balance goes up.
@@ -106,10 +113,96 @@ public class Cell {
             if (balance < 0) {//If the balance is negative then the parentheses are not balanced.
                 return false;
             }
+
         }
-        return balance ==0;//Balance must be zero if the parentheses are balanced
+        return balance == 0;//Balance must be zero if the parentheses are balanced
+    }
+
+
+    private static int findMainOp(String form) {
+        int balance = 0;
+        int mainOpIndex = -1;
+
+        for (int i = 0; i < form.length(); i++) {
+            char c = form.charAt(i);
+            if (c == '(') balance++;
+            else if (c == ')') balance--;
+            else if (balance == 0) {
+                if(c=='+'||c=='-'||(mainOpIndex==-1 && (c=='*'||c=='/'))){
+                    mainOpIndex = i;
+
+                }
+
             }
         }
+        return mainOpIndex;
+    }
+
+
+    public static Double computeForm(String form) {
+
+        if (form.startsWith("=")) {
+            form = form.substring(1);//Remove the equals sign for evaluation
+        }
+        if (isNumber(form)) {
+            return Double.parseDouble(form);//If it's just a number then return its value
+        }
+        if (form.startsWith("(") && form.endsWith(")") && balancedPar(form)) {
+            String innerFormula= form.substring(1, form.length() - 1);
+            return computeForm(innerFormula);//Remove parentheses to evaluate content inside them
+        }
+
+        int mainOpIndex = findMainOp(form);
+        if (mainOpIndex == -1) {
+            return null;//No valid operator
+        }
+
+        String leftSide = form.substring(0, mainOpIndex);
+        String rightSide = form.substring(mainOpIndex + 1);
+
+        if(leftSide.isEmpty() || rightSide.isEmpty()){
+            return null;//A formula missing operands is invalid.
+        }
+
+        Double leftValue = computeForm(leftSide);
+        Double rightValue = computeForm(rightSide);
+
+        if (leftValue == null || rightValue == null) {
+            return null;
+        }
+
+
+        char op = form.charAt(mainOpIndex);
+        switch (op) {
+            case '+':
+                return leftValue + rightValue;
+            case '-':
+                return leftValue - rightValue;
+            case '*':
+                return leftValue * rightValue;
+            case '/':
+                if(rightValue==0){
+                    return null;//Cannot divide by zero.
+                }
+                return leftValue / rightValue;
+            default:
+                return null;
+        }
+    }
+public static Double computeWithError(String form) {
+    Double result = computeForm(form);
+    if (result == null) {
+        System.out.println("ERR_FORM");
+    }
+    return result;
+}
+}
+
+
+
+
+
+
 
 
 
