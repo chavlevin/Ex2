@@ -127,50 +127,125 @@ public class Cell {
             char c = form.charAt(i);
             if (c == '(') balance++;
             else if (c == ')') balance--;
-            else if (balance == 0) {
-                if(c=='+'||c=='-'||(mainOpIndex==-1 && (c=='*'||c=='/'))){
+            else if (balance == 0) {//Only consider operators with highest precedence
+                if (c == '*' || c == '/') {
                     mainOpIndex = i;
-
+                }else if ((c == '+' || c == '-') && mainOpIndex == -1) {
+                    if(i==0||form.charAt(i-1)=='(' || form.charAt(i-1)=='+' || form.charAt(i-1)=='-'){
+                        continue;
+                    }
+                    mainOpIndex = i;
                 }
-
             }
         }
         return mainOpIndex;
+
     }
 
 
     public static Double computeForm(String form) {
 
-        if (form.startsWith("=")) {
+        if (form.startsWith("=") && form.length()>1) {
             form = form.substring(1);//Remove the equals sign for evaluation
         }
+
+        form = form.trim();
+
+
+        while(form.contains("(")){
+            System.out.println("form = " + form);
+
+
+            int startIndex = form.lastIndexOf("(");//Find the innermost opening parentheses
+            if(startIndex==-1){
+                return null;
+            }
+            int endIndex = form.indexOf(")", startIndex);//Find the pair
+            if(endIndex==-1 || endIndex<=startIndex){
+                return null;
+            }
+            String innerForm = form.substring(startIndex + 1, endIndex).trim();//Content inside the parentheses
+
+            if(innerForm.isEmpty()){
+                return null;//Empty parentheses
+            }
+            Double innerResult = computeForm(innerForm);
+            System.out.println("innerResult = " + innerResult);
+            if(innerResult == null){
+                return null;//If the inner formula is invalid, return null.
+            }
+
+            form = form.substring(0,startIndex) + innerResult + form.substring(endIndex +1).trim();
+            System.out.println("form = " + form);
+
+            if (form.startsWith("(") && form.endsWith(")") && balancedPar(form)) {
+                return computeForm(form.substring(1, form.length() - 1));//Remove parentheses to evaluate content inside them
+            }
+
+
+        }
+
+
+        if(form.startsWith("-")) {
+            String subForm = form.substring(1).trim();
+            if (isNumber(subForm)) {
+                return -Double.parseDouble(subForm);//If form is just a negative number, return it as a number
+            }
+            Double subResult = computeForm(subForm);
+            if(subResult==null){
+                return null;
+            }
+            return -subResult;//If it's a negative expression, evaluate recursively
+        }
+
         if (isNumber(form)) {
             return Double.parseDouble(form);//If it's just a number then return its value
         }
-        if (form.startsWith("(") && form.endsWith(")") && balancedPar(form)) {
-            String innerFormula= form.substring(1, form.length() - 1);
-            return computeForm(innerFormula);//Remove parentheses to evaluate content inside them
-        }
+
+
 
         int mainOpIndex = findMainOp(form);
         if (mainOpIndex == -1) {
             return null;//No valid operator
         }
 
-        String leftSide = form.substring(0, mainOpIndex);
-        String rightSide = form.substring(mainOpIndex + 1);
+        String leftSide = form.substring(0, mainOpIndex).trim();
+        String rightSide = form.substring(mainOpIndex + 1).trim();
 
-        if(leftSide.isEmpty() || rightSide.isEmpty()){
+
+        if(isNumber(leftSide) && isNumber(rightSide)){//If left and right side are simple numbers, no need to computeForm again on them from beginning
+            Double leftValue = Double.parseDouble(leftSide);
+            Double rightValue = Double.parseDouble(rightSide);
+
+            char op = form.charAt(mainOpIndex);
+            switch (op) {
+                case '+':
+                    return leftValue + rightValue;
+                case '-':
+                    return leftValue - rightValue;
+                case '*':
+                    return leftValue * rightValue;
+                case '/':
+                    if(rightValue==0){
+                        return null;//Cannot divide by zero.
+                    }
+                    return leftValue / rightValue;
+                default:
+                    return null;
+            }
+        }
+
+
+        if(leftSide.isEmpty() || rightSide.isEmpty() || !isForm("=" + leftSide) || !isForm(rightSide)){
             return null;//A formula missing operands is invalid.
         }
 
-        Double leftValue = computeForm(leftSide);
+//Recursively compute left and right side if they are not numbers
+     Double leftValue = computeForm(leftSide);
         Double rightValue = computeForm(rightSide);
-
-        if (leftValue == null || rightValue == null) {
-            return null;
-        }
-
+if(leftValue == null || rightValue == null){
+    return null;//Return null if either side is invalid.
+}
 
         char op = form.charAt(mainOpIndex);
         switch (op) {
@@ -189,6 +264,8 @@ public class Cell {
                 return null;
         }
     }
+
+
 public static Double computeWithError(String form) {
     Double result = computeForm(form);
     if (result == null) {

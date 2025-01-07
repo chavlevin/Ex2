@@ -9,6 +9,7 @@ public class Main {
             System.out.println("Test 5: " + Cell.computeForm("=8/2")); // Expected: 4.0
             System.out.println("Test 6: " + Cell.computeForm("=((1+2)-(3+1))")); // Expected: -1.0
             System.out.println("Test 7: " + Cell.computeForm("=((2*5)+10)")); // Expected: 20.0
+            System.out.println(Cell.computeForm("=(1+1)*(5/1)"));
         }
 
 
