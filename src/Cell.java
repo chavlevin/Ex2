@@ -153,9 +153,6 @@ public class Cell {
 
 
         while(form.contains("(")){
-            System.out.println("form = " + form);
-
-
             int startIndex = form.lastIndexOf("(");//Find the innermost opening parentheses
             if(startIndex==-1){
                 return null;
@@ -170,13 +167,11 @@ public class Cell {
                 return null;//Empty parentheses
             }
             Double innerResult = computeForm(innerForm);
-            System.out.println("innerResult = " + innerResult);
             if(innerResult == null){
                 return null;//If the inner formula is invalid, return null.
             }
 
             form = form.substring(0,startIndex) + innerResult + form.substring(endIndex +1).trim();
-            System.out.println("form = " + form);
 
             if (form.startsWith("(") && form.endsWith(")") && balancedPar(form)) {
                 return computeForm(form.substring(1, form.length() - 1));//Remove parentheses to evaluate content inside them
