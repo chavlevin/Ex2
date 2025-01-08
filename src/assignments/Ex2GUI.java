@@ -1,4 +1,4 @@
-package assignments.ex2;
+package assignments;
 
 import java.awt.*;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 public class Ex2GUI {
 
-	private static Sheet table; // this is the main data (an implementation of the Sheet interface).
+	private static Sheet table; // this is the main data (an implementation of the assignments.Sheet interface).
 	private static Index2D cord = null; // a table entry used by the GUI of setting up a cell value / form
 	public Ex2GUI() {;}  // an empty (redundant) constructor.
 

@@ -1,4 +1,4 @@
-package assignments.ex2;
+package assignments;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import java.io.IOException;
  * ArielU. Intro2CS, Ex2: https://docs.google.com/document/d/1-18T-dj00apE4k1qmpXGOaqttxLn-Kwi/edit?usp=sharing&ouid=113711744349547563645&rtpof=true&sd=true
  * DO NOT CHANGE THIS INTERFACE:
  *
- * This interface represents a simple SpreadSheet, which include a 2D
+ * This interface represents a simple SpreadSheet, which includes a 2D
  * array of Cells, with get & set methods for each cell (int x, int y), as well as width, height of this SpreadSheet.
  * The main methods of the interface are:
  *
@@ -45,7 +45,7 @@ public interface Sheet {
     public void set(int x, int y, String c);
 
     /**
-     * Return the Cell in the x,y, position (or null if not in).
+     * Return the assignments.Cell in the x,y, position (or null if not in).
      * @param x integer, x-coordinate of the cell.
      * @param y integer, y-coordinate of the cell.
      * @return the cell in the x,y coordinate.

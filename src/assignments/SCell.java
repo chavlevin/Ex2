@@ -1,5 +1,4 @@
-package assignments.ex2;
-// Add your documentation below:
+package assignments;// Add your documentation below:
 
 public class SCell implements Cell {
     private String line;

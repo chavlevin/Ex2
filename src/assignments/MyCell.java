@@ -1,5 +1,6 @@
+package assignments;
 
-public class Cell {
+public class MyCell {
 
     //This method checks if the String in cell is a number
 

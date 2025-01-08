@@ -1,4 +1,4 @@
-package assignments.ex2;
+package assignments;
 // Add your documentation below:
 
 public class CellEntry  implements Index2D {
