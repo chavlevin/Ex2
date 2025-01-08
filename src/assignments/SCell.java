@@ -3,7 +3,9 @@ package assignments;// Add your documentation below:
 public class SCell implements Cell {
     private String line;
     private int type;
-    // Add your code here
+    public static final int TYPE_NUMBER = 0;
+    public static final int TYPE_TEXT = 1;
+    public static final int TYPE_FORMULA = 2;
 
     public SCell(String s) {
         // Add your code here
@@ -26,9 +28,15 @@ public class SCell implements Cell {
 
     @Override
 public void setData(String s) {
-        // Add your code here
-        line = s;
-        /////////////////////
+        line = s.trim();
+
+        if(MyCell.isNumber(line)){
+            type = TYPE_NUMBER;
+        } else if(MyCell.isForm(line)){
+            type = TYPE_FORMULA;
+        }else{
+            type = TYPE_TEXT;
+        }
     }
     @Override
     public String getData() {
