@@ -77,31 +77,28 @@ public class MyCell {
                     return false;//Two operators in a row is invalid
                 }
                 lastCharOp = true;
-                } else if (Character.isDigit(o) || o == '(' || o == ')') {
-                    lastCharOp = false;
-                } else {
-                    return false;
-                }
+            } else if (Character.isDigit(o) || o == '(' || o == ')') {
+                lastCharOp = false;
+            } else {
+                return false;
             }
-            if(lastCharOp) {
-                return false;//Ensures the last character isn't an operator
-            }
-            int mainOpIndex = findMainOp(f);
-            if(mainOpIndex==-1) {
-                return false;//No valid operator found
-            }
+        }
+        if (lastCharOp) {
+            return false;//Ensures the last character isn't an operator
+        }
+        int mainOpIndex = findMainOp(f);
+        if (mainOpIndex == -1) {
+            return false;//No valid operator found
+        }
 
-            String leftSide = f.substring(0, mainOpIndex);//Left side of the operator
-            String rightSide = f.substring(mainOpIndex + 1);//Everything to the right of the operator
+        String leftSide = f.substring(0, mainOpIndex);//Left side of the operator
+        String rightSide = f.substring(mainOpIndex + 1);//Everything to the right of the operator
 
-            return !leftSide.isEmpty() && !rightSide.isEmpty() && isForm("=" + leftSide) && isForm("="+ rightSide);
-            }
-
-
-
+        return !leftSide.isEmpty() && !rightSide.isEmpty() && isForm("=" + leftSide) && isForm("=" + rightSide);
+    }
 
 
-            private static boolean balancedPar(String f) {//Checks if amount of parentheses are balanced
+    private static boolean balancedPar(String f) {//Checks if amount of parentheses are balanced
         int balance = 0;
 
         for (int i = 0; i < f.length(); i++) {
@@ -131,8 +128,8 @@ public class MyCell {
             else if (balance == 0) {//Only consider operators with highest precedence
                 if (c == '*' || c == '/') {
                     mainOpIndex = i;
-                }else if ((c == '+' || c == '-') && mainOpIndex == -1) {
-                    if(i==0||form.charAt(i-1)=='(' || form.charAt(i-1)=='+' || form.charAt(i-1)=='-'){
+                } else if ((c == '+' || c == '-') && mainOpIndex == -1) {
+                    if (i == 0 || form.charAt(i - 1) == '(' || form.charAt(i - 1) == '+' || form.charAt(i - 1) == '-') {
                         continue;
                     }
                     mainOpIndex = i;
@@ -146,33 +143,33 @@ public class MyCell {
 
     public static Double computeForm(String form) {
 
-        if (form.startsWith("=") && form.length()>1) {
+        if (form.startsWith("=") && form.length() > 1) {
             form = form.substring(1);//Remove the equals sign for evaluation
         }
 
         form = form.trim();
 
 
-        while(form.contains("(")){
+        while (form.contains("(")) {
             int startIndex = form.lastIndexOf("(");//Find the innermost opening parentheses
-            if(startIndex==-1){
+            if (startIndex == -1) {
                 return null;
             }
             int endIndex = form.indexOf(")", startIndex);//Find the pair
-            if(endIndex==-1 || endIndex<=startIndex){
+            if (endIndex == -1 || endIndex <= startIndex) {
                 return null;
             }
             String innerForm = form.substring(startIndex + 1, endIndex).trim();//Content inside the parentheses
 
-            if(innerForm.isEmpty()){
+            if (innerForm.isEmpty()) {
                 return null;//Empty parentheses
             }
             Double innerResult = computeForm(innerForm);
-            if(innerResult == null){
+            if (innerResult == null) {
                 return null;//If the inner formula is invalid, return null.
             }
 
-            form = form.substring(0,startIndex) + innerResult + form.substring(endIndex +1).trim();
+            form = form.substring(0, startIndex) + innerResult + form.substring(endIndex + 1).trim();
 
             if (form.startsWith("(") && form.endsWith(")") && balancedPar(form)) {
                 return computeForm(form.substring(1, form.length() - 1));//Remove parentheses to evaluate content inside them
@@ -182,13 +179,13 @@ public class MyCell {
         }
 
 
-        if(form.startsWith("-")) {
+        if (form.startsWith("-")) {
             String subForm = form.substring(1).trim();
             if (isNumber(subForm)) {
                 return -Double.parseDouble(subForm);//If form is just a negative number, return it as a number
             }
             Double subResult = computeForm(subForm);
-            if(subResult==null){
+            if (subResult == null) {
                 return null;
             }
             return -subResult;//If it's a negative expression, evaluate recursively
@@ -197,7 +194,6 @@ public class MyCell {
         if (isNumber(form)) {
             return Double.parseDouble(form);//If it's just a number then return its value
         }
-
 
 
         int mainOpIndex = findMainOp(form);
@@ -209,7 +205,7 @@ public class MyCell {
         String rightSide = form.substring(mainOpIndex + 1).trim();
 
 
-        if(isNumber(leftSide) && isNumber(rightSide)){//If left and right side are simple numbers, no need to computeForm again on them from beginning
+        if (isNumber(leftSide) && isNumber(rightSide)) {//If left and right side are simple numbers, no need to computeForm again on them from beginning
             Double leftValue = Double.parseDouble(leftSide);
             Double rightValue = Double.parseDouble(rightSide);
 
@@ -222,7 +218,7 @@ public class MyCell {
                 case '*':
                     return leftValue * rightValue;
                 case '/':
-                    if(rightValue==0){
+                    if (rightValue == 0) {
                         return null;//Cannot divide by zero.
                     }
                     return leftValue / rightValue;
@@ -232,16 +228,16 @@ public class MyCell {
         }
 
 
-        if(leftSide.isEmpty() || rightSide.isEmpty() || !isForm("=" + leftSide) || !isForm(rightSide)){
+        if (leftSide.isEmpty() || rightSide.isEmpty() || !isForm("=" + leftSide) || !isForm(rightSide)) {
             return null;//A formula missing operands is invalid.
         }
 
 //Recursively compute left and right side if they are not numbers
-     Double leftValue = computeForm(leftSide);
+        Double leftValue = computeForm(leftSide);
         Double rightValue = computeForm(rightSide);
-if(leftValue == null || rightValue == null){
-    return null;//Return null if either side is invalid.
-}
+        if (leftValue == null || rightValue == null) {
+            return null;//Return null if either side is invalid.
+        }
 
         char op = form.charAt(mainOpIndex);
         switch (op) {
@@ -252,7 +248,7 @@ if(leftValue == null || rightValue == null){
             case '*':
                 return leftValue * rightValue;
             case '/':
-                if(rightValue==0){
+                if (rightValue == 0) {
                     return null;//Cannot divide by zero.
                 }
                 return leftValue / rightValue;
@@ -262,15 +258,26 @@ if(leftValue == null || rightValue == null){
     }
 
 
-public static Double computeWithError(String form) {
-    Double result = computeForm(form);
-    if (result == null) {
-        System.out.println("ERR_FORM");
-    }
-    return result;
-}
-}
+    public static String computeWithError(String form) {
+        if (form == null || form.isEmpty()) {
+            return "ERR_EMPTY_FORM";
+        }
+        if (!form.startsWith("=")) {
+            return "ERR_INVALID_FORM";
+        }
+        Double result = computeForm(form);
+        if (result == null) {
+            if (form.contains("/0")) {
+                return "ERR_DIV_ZERO";
+            } else {
+                return "ERR_FORM";
 
+            }
+        }
+        return result.toString();
+    }
+
+}
 
 
 
