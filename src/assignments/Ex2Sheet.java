@@ -176,6 +176,18 @@ private List<String> getReferences(String formula){
             }
         return references;
         }
+
+        private Cell getCellByRef(String cellRef){
+        int refX = getXFromReference(cellRef);
+        int refY = getYFromReference(cellRef);
+
+        if(isIn(refX, refY)){
+            return get(refX,refY);
+        }
+        return null;
+        }
+
+
 private int getXFromReference(String ref){
         int column = 0;
         for(int i = 0; i<ref.length();i++){
