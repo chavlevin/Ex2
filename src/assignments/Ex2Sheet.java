@@ -1,24 +1,66 @@
 package assignments;
 
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 // Add your documentation below:
 
 public class Ex2Sheet implements Sheet {
+    private final int rows;
+    private final int cols;
+    private String[][] data;
+    private int[][] order;
     private Cell[][] table;
 
-    public Ex2Sheet(int x, int y) {
-        table = new SCell[x][y];
-        for(int i=0;i<x;i=i+1) {
-            for(int j=0;j<y;j=j+1) {
-                table[i][j] = new SCell(Ex2Utils.EMPTY_CELL);
+
+
+
+
+    public Ex2Sheet(int rows, int cols) {
+        this.rows = rows;
+        this.cols = cols;
+        this.data = new String [rows][cols];
+        this.order = new int[rows][cols];
+        this.table = new Cell[rows][cols];
+
+        for(int r=0;r<rows;r++) {
+            for(int c=0;c<cols;c++) {
+                data[r][c] = Ex2Utils.EMPTY_CELL;
+                order[r][c] = 0;
+                table[r][c] = new SCell(Ex2Utils.EMPTY_CELL, this);
             }
         }
-        eval();
     }
+
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
+    }
+    public void setCellContent(String position, String content) {
+        int[] rc = fromCellName(position);
+        if(!isIn(rc[0],rc[1])){
+            throw new IllegalArgumentException("Invalid cell position");
+        }
+        data[rc[0]][rc[1]] = content;
+        table[rc[0]][rc[1]] = new SCell(content, this);
+        eval();
+    }
+
+    public String getCellContent(String position) {
+        int[] rc = fromCellName(position);
+        Cell cell = table[rc[0]][rc[1]];
+
+        if (cell instanceof SCell) {
+            return ((SCell) cell).getValue();
+
+    }
+    return Ex2Utils.EMPTY_CELL;
+    }
+
+    private int[] fromCellName(String pos){
+        int col = pos.toUpperCase().charAt(0)-'A';
+        int row = Integer.parseInt(pos.substring(1))-1;
+        return new int[]{row,col};
     }
 
 
@@ -33,14 +75,18 @@ public class Ex2Sheet implements Sheet {
         return ans;
     }
 
+
+
     @Override
     public Cell get(int x, int y) {
-        return table[x][y];
+        if(x>=0 && x<rows && y>=0 && y<cols){
+            return table[x][y];
+        }
+        return null;
     }
 
     @Override
     public Cell get(String cords) {
-        Cell ans = null;
 
         int x = getXFromReference(cords);
         int y = getYFromReference(cords);
@@ -48,55 +94,52 @@ public class Ex2Sheet implements Sheet {
         if(isIn(x,y)){
             return get(x,y);
         }
-        return ans;
+        return null;
     }
 
     @Override
     public int width() {
-        return table.length;
+        return rows;
     }
     @Override
     public int height() {
-        return table[0].length;
+        return cols;
     }
+
     @Override
     public void set(int x, int y, String s) {
-        Cell c = new SCell(s);
-        table[x][y] = c;
-
-        if(MyCell.isForm(s)){
-            String computedVal = MyCell.computeWithError(s);
-            if(computedVal != null){
-                c.setData(computedVal);
-            }
-        }
+        table[x][y] = new SCell(s, this);
         eval();
     }
 
 
+
     @Override
     public void eval() {
-        int[][] dd = depth();
-
-        for(int x=0; x<width();x++){
-            for(int y=0;y<height();y++){
-                Cell cell = get(x,y);
-
-                if(cell !=null && MyCell.isForm(cell.getData())){
-                    String formula = cell.getData();
-                    String result = MyCell.computeWithError(formula);
-
-                   cell.setData(result);
+        int[][] depDepth = depth();
+        for(int d = 0;d<=rows * cols;d++){
+        for(int r=0;r<rows;r++) {
+            for (int c = 0; c < cols; c++) {
+                if (depDepth[r][c] == d) {
+                    Cell cell = get(r, c);
+                    if (cell instanceof SCell && MyCell.isForm(cell.getData())) {
+                        try {
+                            ((SCell) cell).evaluateForm(new ArrayList<>(), new ArrayList<>());
+                        }catch(Exception e){
+                            cell.setData(Ex2Utils.ERR_FORM);
+                        }
                     }
                 }
-                    }
-                }
+            }
+        }
+            }
+        }
 
 
 
     @Override
     public boolean isIn(int xx, int yy) {
-        boolean ans = xx>=0 && yy>=0 && xx<width() && yy<height();
+        boolean ans = xx>=0 && yy>=0 && xx<rows && yy<cols;
 
         if(ans){
             Cell cell = get(xx,yy);
@@ -109,52 +152,57 @@ public class Ex2Sheet implements Sheet {
 
     @Override
     public int[][] depth() {
-        int[][] depth = new int[width()][height()];
+        int[][] depth = new int[rows][cols];
 
-        for (int i = 0; i < width(); i++) {
-            for (int j = 0; j < height(); j++) {
-                depth[i][j] = -1;
+        for(int x = 0; x<rows;x++){
+            for(int y = 0;y<cols;y++){
+                depth[x][y] = -1;
             }
         }
+        boolean updated;
         int currentDepth = 0;
-        boolean anyUpdated = true;
-        int cellsProcessed = 0;
-        int totalCells = width() * height();
 
-        while (cellsProcessed < totalCells && anyUpdated) {
-            anyUpdated = false;
-
-
-            for (int x = 0; x < width(); x++) {
-                for (int y = 0; y < height(); y++) {
-                    if (depth[x][y] == -1 && canCompute(x, y, depth)) {
+        do {
+            updated = false;
+            for (int x = 0; x < rows; x++) {
+                for (int y = 0; y < cols; y++) {
+                    if (depth[x][y] == -1){
+                        List<String> visited = new ArrayList<>();
+                    if (canCompute(x, y, depth,visited)) {
                         depth[x][y] = currentDepth;
-                        cellsProcessed++;
-                        anyUpdated = true;
+                        updated = true;
+                    }
                     }
                 }
-
             }
             currentDepth++;
-        }
+        }while(updated);
         return depth;
-    }
+        }
 
-    private boolean canCompute(int x, int y, int [][]depth){
+
+
+    private boolean canCompute(int x, int y, int [][]depth, List<String> visited){
         Cell cell = get(x, y);
 
-        if(cell!=null && MyCell.isForm(cell.getData())){
-            String formula = cell.getData();
+        if (cell == null || !MyCell.isForm(cell.getData())) {
+            return true;
+        }
 
-            for(String ref: getReferences(formula)){
-                int refX = getXFromReference(ref);
-                int refY = getYFromReference(ref);
+        String formula = cell.getData();
 
-                if(depth[refX][refY] ==-1){
+        for(String ref: getReferences(formula)){
+            if (visited.contains(ref)) {
+                return false;
+            }
+            int refX = getXFromReference(ref);
+            int refY = getYFromReference(ref);
+
+            if(!isIn(refX,refY) || depth[refX][refY] ==-1){
                     return false;
                 }
             }
-        }
+        visited.add(cell.getData());
         return true;
         }
 
@@ -169,7 +217,11 @@ private List<String> getReferences(String formula){
                     ref.append(formula.charAt(index));
                     index++;
                 }
-                references.add(ref.toString());
+                String reference = ref.toString();
+                if(getXFromReference(reference)<0 || getYFromReference(reference)<0){
+                    throw new IllegalArgumentException("Invalid cell reference");
+                }
+                references.add(reference);
             }else {
                 index++;
             }
@@ -177,26 +229,22 @@ private List<String> getReferences(String formula){
         return references;
         }
 
-        private Cell getCellByRef(String cellRef){
-        int refX = getXFromReference(cellRef);
-        int refY = getYFromReference(cellRef);
-
-        if(isIn(refX, refY)){
-            return get(refX,refY);
-        }
-        return null;
-        }
 
 
-private int getXFromReference(String ref){
-        int column = 0;
-        for(int i = 0; i<ref.length();i++){
-            column = column * 26 +(ref.charAt(i) - 'A' + 1);
-        }
-        return column - 1;
+
+private int getXFromReference(String ref) {
+    int column = 0;
+    int i = 0;
+
+    while (i < ref.length() && Character.isLetter(ref.charAt(i))) {
+        column = column * 26 + (Character.toUpperCase(ref.charAt(i)) - 'A' + 1);
+        i++;
+    }
+    return column - 1;
 }
+
 private int getYFromReference(String ref){
-        return Integer.parseInt(ref.substring(1))-1;
+        return Integer.parseInt(ref.replaceAll("[^0-9]", "")) -1;
 }
 
     @Override
@@ -224,36 +272,45 @@ private int getYFromReference(String ref){
         FileWriter fileWriter = new FileWriter(fileName);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-        try{
-            for(int x = 0; x<width();x++){
-                for(int y = 0;y<height();y++){
-                    Cell cell = get(x,y);
-                    if(cell!=null){
+        try {
+            for (int x = 0; x < rows; x++) {
+                for (int y = 0; y < cols; y++) {
+                    Cell cell = get(x, y);
+                    if (cell != null) {
                         bufferedWriter.write(cell.getData());
                     }
-                    bufferedWriter.write("\t");
+                    if (y < cols - 1) {
+                        bufferedWriter.write(",");
+                    }
                 }
                 bufferedWriter.newLine();
-
             }
-        }catch (IOException exception){
-            System.out.println("Error saving the file: " + exception.getMessage());
-            throw exception;
-        }finally {
-            bufferedWriter.close();
+            } finally{
+                bufferedWriter.close();
+            }
         }
 
-    }
+
+
 
     @Override
     public String eval(int x, int y) {
-        String ans = null;
-        if(get(x,y)!=null) {
-            ans = get(x,y).toString();
+        Cell cell = get(x,y);
+        if(cell!=null){
+            String data = cell.getData();
+            if(MyCell.isForm(data)) {
+                try{
+                    return MyCell.computeWithError("=" +data);
+                }catch(Exception e){
+                    return Ex2Utils.EMPTY_CELL;
+                }
+            }else{
+                return data;
+            }
+        }else{
+            return Ex2Utils.EMPTY_CELL;
+
         }
-        if(ans !=null && MyCell.isForm(ans)){
-            ans = MyCell.computeWithError(ans);
-        }
-        return ans;
+
         }
 }

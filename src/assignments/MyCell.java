@@ -49,14 +49,17 @@ public class MyCell {
 
     //This method will check whether a string is a formula.
 
-    public static boolean isForm(String f) {
-        if (!f.startsWith("=")) {//A valid formula must start with an equals sign
+    public static boolean isForm(String data) {
+        if(data==null||data.isEmpty()||!data.startsWith("=")){
             return false;
         }
-        f = f.substring(1); //To validate the rest of the string, we look at everything after the equals sign.
+       String f = data.substring(1); //To validate the rest of the string, we look at everything after the equals sign.
 
         if (isNumber(f)) {
             return true;//A standalone number is a valid formula
+        }
+        if(f.matches("[A-Za-z]+[0-9]+([+\\-*/][A-Za-z]+[0-9]+)*")){
+            return true;
         }
 
         if (!balancedPar(f)) {//If there are parentheses in the formula, they must be balanced.
@@ -79,7 +82,13 @@ public class MyCell {
                 lastCharOp = true;
             } else if (Character.isDigit(o) || o == '(' || o == ')') {
                 lastCharOp = false;
-            } else {
+            } else if(Character.isLetter(o)) {
+                if (i + 1 < f.length() && Character.isDigit(f.charAt(i + 1))) {
+                    i++;
+                } else {
+                    return false;
+                }
+            }else{
                 return false;
             }
         }
